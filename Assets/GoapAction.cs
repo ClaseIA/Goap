@@ -27,15 +27,49 @@ public abstract class GoapAction : MonoBehaviour {
     private void Reset()
     {
         Target = null;
+        reset();
+    }
+    //para que cada accjion resetee sus variables
+    public abstract void reset();
+
+    //cada accion debe decir cuano ya termino
+    public abstract void isDone();
+
+    //cada accion debe checar si sus precondiciones se cumplen
+    public abstract bool checkPreconditions(GameObject go);
+    //cada accion debe ejecutar sus tareas
+    public abstract bool Perform(GameObject gameobject);
+
+    public bool inRange;
+    // si la accion necesita estar cerca de un objetivo
+    public abstract bool requiresInRange();
+    public bool IsInRange()
+    {
+        return inRange;
     }
 
-    // Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    //agregar precondiciones
+    public void AddPrecondition(string key, object value)
+    {
+        Precondiciones.Add(key, value);
+    }
+
+    //agregar efectos
+    public void AddEffect(string key, object value)
+    {
+        Efectos.Add(key, value);
+    }
+
+    //revisar las precondiciones de la accion
+    public Dictionary<string, object> GetPrecondiciones
+    {
+        get { return Precondiciones; }
+    }
+    //revisar los efectos de la accion
+    public Dictionary<string, object> GetEfectos
+    {
+        get { return Efectos; }
+    }
+
+   
 }
