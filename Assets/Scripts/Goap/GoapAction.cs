@@ -33,7 +33,7 @@ public abstract class GoapAction : MonoBehaviour {
     public abstract void reset();
 
     //cada accion debe decir cuano ya termino
-    public abstract void isDone();
+    public abstract bool isDone();
 
     //cada accion debe checar si sus precondiciones se cumplen
     public abstract bool checkPreconditions(GameObject go);
@@ -46,6 +46,11 @@ public abstract class GoapAction : MonoBehaviour {
     public bool IsInRange()
     {
         return inRange;
+    }
+
+    public void SetInRange(bool range)
+    {
+        inRange = range;
     }
 
     //agregar precondiciones

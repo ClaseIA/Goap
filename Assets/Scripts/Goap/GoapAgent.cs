@@ -34,6 +34,22 @@ public class GoapAgent : MonoBehaviour {
         //provedor de datos del mundo
         goapData = GetComponent<IGOAP>();
         // Crear nuestros estados
+
+        CrearEstadoActuar();
+        CrearEstadoIdle();
+        CrearEstadoMoverse();
+
+        //empezamos pensando
+        maquinaDeEstados.pushState(idleState);
+
+
+        //cargar las accions que puede hacer el agente
+
+        GoapAction[] acciones = GetComponents<GoapAction>();
+        foreach(GoapAction a in acciones)
+            AccionesDisponibles.Add(a);
+
+
 	}
 
     public void CrearEstadoIdle()
@@ -48,7 +64,8 @@ public class GoapAgent : MonoBehaviour {
                 Dictionary<string, object> goal = goapData.CreateGoalState();
 
                 //crear un plan
-                Queue<GoapAction> plan;
+                Queue<GoapAction> plan= Planeador.ElPlan(
+                    gameObject,AccionesDisponibles,worldState,goal);
 
                 //logramos tener un plan?
                 if (plan != null)
@@ -75,10 +92,110 @@ public class GoapAgent : MonoBehaviour {
     }
 
 
+    public void CrearEstadoActuar()
+
+
+    {
+        ActState = (fsm, gameObj) =>
+            {
+                //ejecutar la accion
+                if (AccionesActuales.Count <= 0)// no tengo un plan
+                {
+                    fsm.popState();
+                    fsm.pushState(idleState);
+                    goapData.ActionsFinished();
+                    return;
+                }
+                //si si tengo acciones entronces objetco la primeroa
+
+                GoapAction accion = AccionesActuales.Peek();
+                if (accion.isDone())
+                {
+
+                    //si ya se termino la accion la lquito
+                    AccionesActuales.Dequeue();
+
+
+                }
+                //si no ha terminad oy quedan acciones hay que ejecutrarl
+                if (AccionesActuales.Count > 0)
+                {
+                    accion = AccionesActuales.Peek();
+                    //verifico si requiere estar en un rango}(cerca de su objetivo)
+                    bool enRango = accion.requiresInRange() ? accion.IsInRange() : true;
+                    if (enRango)
+                    {
+                        bool exito = accion.Perform(gameObj);
+                        // sil a accion no se ejecuto
+                        if (!exito)
+                        {
+                            //planeo otra vez
+                            fsm.popState();
+                            //sjalgo de acturar y vuelvo a idle
+                            fsm.pushState(idleState);
+
+                            goapData.PlanAborted(accion);
+                        }
+                    }
+
+                    else
+                    {
+                        //no esta en donde deberia estar, no esta en rango
+                        Debug.Log("estoy lejos del objetivo");
+                        fsm.pushState(MoveState);
+                    }
+                }
+                else
+                {
+                    //no quedan acciones, entonces puedo volver a planear
+                    fsm.popState();
+                    fsm.pushState(idleState);
+
+                    goapData.ActionsFinished();
+                }
+            };
+        
+    }
+
+
+    public void CrearEstadoMoverse()
+    {
+        MoveState=(fsm,gameObj)=>{
+            GoapAction accion= AccionesActuales.Peek();
+            // mover el agenbte hacia el objetivo de la accion si es que tiene
+            if(accion.requiresInRange()&& accion.Target==null){
+                Debug.Log("la accion drequere un targetm pero no tiene");
+                fsm.popState();// salri de actuar
+                fsm.popState();//salir de movers
+                fsm.pushState(idleState);
+                return;
+            }
+
+            //que se mueva
+            if(goapData.MoveAgent(accion)){
+                fsm.popState();
+            }
+
+            ////////////////////////////////////////////////////////////script de movimiento o de lo que quieras/////////////////////////////////////////
+            gameObj.transform.position=Vector3.MoveTowards(
+                gameObj.transform.position,
+                accion.Target.transform.position,
+                Time.deltaTime*5
+                );
+
+            if(Vector3.Distance(gameObj.transform.position,accion.Target.transform.position)<1f){
+                //llega al objetivo
+                accion.SetInRange(true);
+                fsm.popState();//salirde moverse
+            }
+        };
+    }
 
 	
 	// Update is called once per frame
 	void Update () {
+
+        maquinaDeEstados.UpdateFSM(gameObject);
 		
 	}
 }
