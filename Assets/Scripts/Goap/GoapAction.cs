@@ -26,6 +26,7 @@ public abstract class GoapAction : MonoBehaviour {
     //limpiar las variables de la accion
     public void Reset()
     {
+        inRange = false;
         Target = null;
         reset();
     }

@@ -27,6 +27,7 @@ public class GoapAgent : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+        Planeador= new GoapPlanner();
         maquinaDeEstados = new FSM();
         AccionesActuales = new Queue<GoapAction>();
         AccionesDisponibles = new List<GoapAction>();

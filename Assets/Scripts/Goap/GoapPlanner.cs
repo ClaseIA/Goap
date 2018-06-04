@@ -159,7 +159,8 @@ public class GoapPlanner {
                     //puede que el dato ya exista pero que su valor haya cambiado
                 foreach (KeyValuePair<string, object> dato in estadoTem)
                 {
-                    if (dato.Equals(efecto))
+                    //if (dato.Equals(efecto))
+                    if(dato.Key.Equals(efecto.Key))
                     {
                         yaExiste = true;
                         break;
@@ -167,10 +168,8 @@ public class GoapPlanner {
                 }
                 if (yaExiste)
                 {
-                    //puedo actualizar el dato, primero quitandolo del diccionario
-                    estadoTem.Remove(efecto.Key);
-                    //lo vuelo a poner en el estado pero con su valor nuevo
-                    estadoTem.Add(efecto.Key, efecto.Value);
+                    //reemplazo el contenido del estado
+                    estadoTem[efecto.Key] = efecto.Value;
 
                 }
                 else
@@ -194,17 +193,24 @@ public class GoapPlanner {
 
         //para cada precondicion tengo que checar que este en el estado del mundo
 
-        foreach (KeyValuePair<string, object> precondicion in precondiciones)
+        bool sonIguales = true;
+        foreach (KeyValuePair<string, object> precon in precondiciones)
         {
-            // preguntar si esta precondicion esta en el estado del mundo
-            if (!estado.ContainsKey(precondicion.Key))
+            bool igual = false;
+            foreach (KeyValuePair<string, object> valor in estado)
             {
-                //regreso falso porque no se cumplio la recondicion
-                return false; 
+                if (valor.Equals(precon))
+                {
+                    igual = true;
+                    break;
+                       
+                }
             }
+            if (!igual)
+                sonIguales = false;
         }
 
-        return true;
+        return sonIguales;
     }
     
     private class Node
